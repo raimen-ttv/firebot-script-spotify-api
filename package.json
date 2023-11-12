@@ -1,8 +1,8 @@
 {
-  "name": "firebot-custom-script-magic-home",
-  "scriptOutputName": "magicHome",
+  "name": "firebot-script-spotify-api",
+  "scriptOutputName": "spotifyApiForFirebot",
   "version": "1.0.0",
-  "description": "A starter Firebot custom script that will turn lights on",
+  "description": "A Firebot startup script that allows you to control Spotify from Firebot.",
   "main": "",
   "scripts": {
     "build": "webpack",
@@ -10,7 +10,7 @@
     "copy": "node ./scripts/copy-build.js",
     "test": "jest"
   },
-  "author": "ebiggz",
+  "author": "raimen",
   "license": "GNU3",
   "devDependencies": {
     "@crowbartools/firebot-custom-scripts-types": "^5.53.2",
@@ -26,6 +26,7 @@
     "webpack-cli": "^4.1.0"
   },
   "dependencies": {
+    "@spotify/web-api-ts-sdk": "^1.1.2",
     "magic-home": "^2.9.0",
     "node-localstorage": "^2.2.1",
     "nvm": "^0.0.4",
