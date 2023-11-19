@@ -7,9 +7,8 @@ import {
 import { initLogger } from "./logger";
 import { EffectTriggerResponse, Effects } from "@crowbartools/firebot-custom-scripts-types/types/effects";
 import { Logger } from "@crowbartools/firebot-custom-scripts-types/types/modules/logger";
-import SpotifyWebApi from 'spotify-web-api-node'
+import SpotifyWebApi from "spotify-web-api-node";
 
-// import {SpotifyApi, AuthorizationCodeWithPKCEStrategy} from '@spotify/web-api-ts-sdk';
 
 type Params = {
   credential: string 
