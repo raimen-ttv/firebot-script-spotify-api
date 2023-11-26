@@ -7,8 +7,8 @@ import {
 import { initLogger } from "./logger";
 import { EffectTriggerResponse, Effects } from "@crowbartools/firebot-custom-scripts-types/types/effects";
 import { Logger } from "@crowbartools/firebot-custom-scripts-types/types/modules/logger";
-import SpotifyWebApi from "spotify-web-api-node";
-
+import SpotifyWebApi = require("spotify-web-api-node")
+// import open from "open";
 
 type Params = {
   credential: string 
@@ -29,7 +29,7 @@ const script: Firebot.CustomScript<Params> = {
     return {
       credential: {
         type: "string",
-        default: "",
+        default: "asdf",
         description: "Credential key"
       }
     };
@@ -38,15 +38,14 @@ const script: Firebot.CustomScript<Params> = {
   run: async ({parameters, modules}) => {
     const { logger, effectManager, replaceVariableManager } = modules;
     initLogger(logger);
-
+    logger.info("Running script SPOTIFY API TEST!");
 
 
     var scopes = ['playlist-modify-public', 'playlist-modify-private, user-read-playback-state, user-modify-playback-state'],
     redirectUri = 'http://localhost:3000',
     clientId = '74f8735962614cf8b5ba72709d2eac5f',
     state = 'login',
-    showDialog = true,
-    responseType = 'token';
+    showDialog = true
 
     // Setting credentials can be done in the wrapper's constructor, or using the API object's setters.
     var spotifyApi = new SpotifyWebApi({
@@ -63,6 +62,7 @@ const script: Firebot.CustomScript<Params> = {
 
     // https://accounts.spotify.com/authorize?client_id=5fe01282e44241328a84e7c5cc169165&response_type=token&redirect_uri=https://example.com/callback&scope=user-read-private%20user-read-email&state=some-state-of-my-choice&show_dialog=true
     logger.info(authorizeURL);
+    // open(authorizeURL);
 
 
     // const implicitGrantStrategy = new AuthorizationCodeWithPKCEStrategy(
