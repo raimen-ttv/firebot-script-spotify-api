@@ -8,6 +8,11 @@ import { initLogger } from "./logger";
 import { EffectTriggerResponse, Effects } from "@crowbartools/firebot-custom-scripts-types/types/effects";
 import { Logger } from "@crowbartools/firebot-custom-scripts-types/types/modules/logger";
 import SpotifyWebApi = require("spotify-web-api-node")
+import * as express from "express";
+import { Request, Response } from "express";
+import { initSpotify } from "./spotifyHelper";
+import { spotifyRequestEffect } from "./firebot/effects/send-api-request";
+// import * as path from "path";
 // import open from "open";
 
 type Params = {
@@ -22,6 +27,7 @@ const script: Firebot.CustomScript<Params> = {
       author: "Raimen",
       version: "1.0",
       firebotVersion: "5",
+      website: "https://twitch.tv/raimen"
     };
   },
 
@@ -30,7 +36,8 @@ const script: Firebot.CustomScript<Params> = {
       credential: {
         type: "string",
         default: "asdf",
-        description: "Credential key"
+        description: "Credential key",
+        secondaryDescription: "You must authenticate with Spotify to get this key. Open this url to get started: https://bit.ly/3Rjaz2d"
       }
     };
   },
@@ -38,30 +45,38 @@ const script: Firebot.CustomScript<Params> = {
   run: async ({parameters, modules}) => {
     const { logger, effectManager, replaceVariableManager } = modules;
     initLogger(logger);
-    logger.info("Running script SPOTIFY API TEST!");
+    await initSpotify(parameters.credential);
 
+    const app = express();
+    const port = 3000;
 
-    var scopes = ['playlist-modify-public', 'playlist-modify-private, user-read-playback-state, user-modify-playback-state'],
-    redirectUri = 'http://localhost:3000',
-    clientId = '74f8735962614cf8b5ba72709d2eac5f',
-    state = 'login',
-    showDialog = true
-
-    // Setting credentials can be done in the wrapper's constructor, or using the API object's setters.
-    var spotifyApi = new SpotifyWebApi({
-      redirectUri: redirectUri,
-      clientId: clientId
+    // app.get('/', (req, res) => {
+    //   logger.info("got request: " + JSON.stringify(req.query));
+    //   const customContent = String(req.query.code)
+    //   res.render('index', { customContent });
+    // })
+    
+    
+    // Endpoint for Spotify redirect
+    app.get('/', (req: Request, res: Response) => {
+        const { code, error } = req.query;
+    
+        // Handle the query parameters as needed
+        if (typeof error === 'string') {
+            // Handle error scenario (e.g., show error message to the user)
+            res.send(`Authentication failed: ${error}`);
+        } else if (typeof code === 'string') {
+            res.send(`You have successfully authenticated with Spotify! Your code: ${code}`);
+        } else {
+            // Handle unexpected case
+            res.send('Invalid response from Spotify');
+        }
+    });
+    
+    app.listen(port, () => {
+      logger.info(`Spotify integration listening at http://localhost:${port}`);
     });
 
-    // Create the authorization URL
-    var authorizeURL = spotifyApi.createAuthorizeURL(
-      scopes,
-      state,
-      showDialog
-    );
-
-    // https://accounts.spotify.com/authorize?client_id=5fe01282e44241328a84e7c5cc169165&response_type=token&redirect_uri=https://example.com/callback&scope=user-read-private%20user-read-email&state=some-state-of-my-choice&show_dialog=true
-    logger.info(authorizeURL);
     // open(authorizeURL);
 
 
@@ -74,7 +89,7 @@ const script: Firebot.CustomScript<Params> = {
 
     // const profile = await spotify.currentUser.profile();
     // logger.debug(JSON.stringify(profile));
-
+    effectManager.registerEffect(spotifyRequestEffect)
   },
 };
 
