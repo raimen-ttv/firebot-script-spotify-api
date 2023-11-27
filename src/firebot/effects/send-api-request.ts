@@ -111,13 +111,13 @@ export const spotifyRequestEffect: Firebot.EffectType<{
     logger.info("sending request: " + event.effect.requestType);
     switch (event.effect.requestType) {
       case "skip":
-        await spotify.skip();
+        // await spotify.skip();
         break;
       case "play":
-        await spotify.play();
+        // await spotify.play();
         break;
       case "pause":
-        await spotify.pause();
+        // await spotify.pause();
         break;
 
     }

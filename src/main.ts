@@ -45,7 +45,8 @@ const script: Firebot.CustomScript<Params> = {
   run: async ({parameters, modules}) => {
     const { logger, effectManager, replaceVariableManager } = modules;
     initLogger(logger);
-    await initSpotify(parameters.credential);
+    await initSpotify();
+    logger.info("post spotify init");
 
     const app = express();
     const port = 3000;
