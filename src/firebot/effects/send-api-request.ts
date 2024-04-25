@@ -4,6 +4,8 @@ import { Firebot } from "@crowbartools/firebot-custom-scripts-types";
 // import { loadModel, getCurrentModel, getAvailableModels } from "../vtube-remote"
 // import * as spotify from "../../spotifyHelper";
 import { logger } from "../../logger";
+import { integration } from "../../integration-definition";
+
 /**
 * The Trigger Hotkey Effect
 */
@@ -28,6 +30,7 @@ export const spotifyRequestEffect: Firebot.EffectType<{
       <eos-container header="Request Type" pad-top="true">
           <div  style="margin-bottom: 15px;">
             <div class="btn-group" uib-dropdown>
+                <p>asdf1234${integration.getCurrentlyPlaying(). }</p>
                 <button id="single-button" type="button" class="btn btn-default" uib-dropdown-toggle>
                 </button>
                 <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">

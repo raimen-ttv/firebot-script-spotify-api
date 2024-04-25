@@ -1,18 +1,11 @@
 "use strict";
-import { Firebot } from "@crowbartools/firebot-custom-scripts-types";
-import EventEmitter from "events";
+import { EventEmitter } from "events";
 
 import { initLogger, logger } from "./logger";
 import { FirebotParameterCategories, FirebotParams } from "@crowbartools/firebot-custom-scripts-types/types/modules/firebot-parameters";
-import myTypes from "@crowbartools/firebot-custom-scripts-types";
-import { IntegrationDefinition } from "@crowbartools/firebot-custom-scripts-types/types/modules/integration-manager";
 
-export type myIntegration<Params extends IntegrationDefinition = IntegrationDefinition> = {
-  
-}
-
-
-export type OldIntegrationDefinition<Params extends FirebotParams = FirebotParams> = {
+// import IntegrationDefinition from "@crowbartools/firebot-custom-scripts-types/types/modules/integration-definition";
+export type IntegrationDefinition<Params extends FirebotParams = FirebotParams> = {
     id: string;
     name: string;
     description: string;
