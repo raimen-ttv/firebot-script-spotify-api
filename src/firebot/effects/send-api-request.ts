@@ -1,4 +1,4 @@
-"use strict";
+
 import { Firebot } from "@crowbartools/firebot-custom-scripts-types";
 // import { AvailableModelsVariable } from "../types";
 // import { loadModel, getCurrentModel, getAvailableModels } from "../vtube-remote"
@@ -6,6 +6,9 @@ import { Firebot } from "@crowbartools/firebot-custom-scripts-types";
 import { logger } from "../../logger";
 import { integration } from "../../integration-definition";
 
+const spotify = integration;
+
+const spotifyOptions = [ "getProfile", "getCurrentlyPlaying", "skip", "play", "pause", "queueTrack", "getPlaylists", "getPlaylistTracks", "seekToPosition", "setVolume", "shufflePlayback", "repeatPlayback", "addToQueue", "removeFromQueue", "playTrack", "playPlaylist", "playAlbum", "playArtist" ] 
 /**
 * The Trigger Hotkey Effect
 */
@@ -33,27 +36,12 @@ export const spotifyRequestEffect: Firebot.EffectType<{
                 <button id="single-button" type="button" class="btn btn-default" uib-dropdown-toggle>
                 </button>
                 <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
-                    <li role="menuitem" ng-click="setRequestType('skip')"><a href>Skip</a></li>
-                    <li role="menuitem" ng-click="setRequestType('play')"><a href>Play</a></li>
-                    <li role="menuitem" ng-click="setRequestType('pause')"><a href>Pause</a></li>
+                    ${spotifyOptions.map(option => `<li role="menuitem" ng-click="setRequestType('${option}')"><a href>${option}</a></li>`).join("")}
                 </ul>
             </div>
         </div>
     </eos-container>
     `,
-    // <eos-container header="Model" ng-if="effect.loadMode === 'model'">
-    //       <ui-select ng-model="selected" on-select="selectModel($select.selected.modelID, $select.selected.modelName)">
-    //         <ui-select-match placeholder="Select a Model...">{{$select.selected.modelName}}</ui-select-match>
-    //         <ui-select-choices repeat="model in modelCollections | filter: {modelName: $select.search}">
-    //             <div ng-bind-html="model.modelName | highlight: $select.search"></div>
-    //         </ui-select-choices>
-    //       </ui-select>
-    //       <p>
-    //         <button style="margin-top:3px" class="btn btn-link" ng-click="reloadAvailableModels()">Refresh Model Collection</button>
-    //         <span class="muted">(Make sure VTube Studio is running and Connected)</span>
-    //       </p>
-    //   </eos-container>
-
 
   /**
   * The controller for the front end Options
@@ -74,25 +62,8 @@ export const spotifyRequestEffect: Firebot.EffectType<{
     $scope.setRequestType = (requestType: string) => {
       $scope.effect.requestType = requestType;
     };
-
-    // $scope.getAvailableModels = () => {
-    //     $q.when(backendCommunicator.fireEventAsync("vtube-get-available-models")).then(
-    //         (modelCollections: AvailableModelsVariable) => {
-    //             $scope.modelCollections = modelCollections.availableModels ?? [];
-    //             $scope.selected = $scope.modelCollections.find((model: { modelName: string; }) =>
-    //                 model.modelName === $scope.effect.modelName
-    //             );
-    //         });
-    // };
-    // $scope.getAvailableModels();
-
-    // $scope.reloadAvailableModels = () => {
-    //     $q.when(backendCommunicator.fireEventAsync("vtube-get-available-models")).then(
-    //         (modelCollections: AvailableModelsVariable) => {
-    //             $scope.modelCollections = modelCollections.availableModels ?? [];
-    //         });
-    // };
   },
+
   /**
   * When the effect is triggered by something
   * Used to validate fields in the option template.
@@ -106,34 +77,30 @@ export const spotifyRequestEffect: Firebot.EffectType<{
     // }
     return errors;
   },
-  /**
-  * When the effect is triggered by something
-  */
   onTriggerEvent: async event => {
     logger.info("sending request: " + event.effect.requestType);
-    switch (event.effect.requestType) {
-      case "skip":
-        // await spotify.skip();
-        break;
-      case "play":
-        // await spotify.play();
-        break;
-      case "pause":
-        // await spotify.pause();
-        break;
-
+    try {
+      let response = await spotify.put(event.effect.requestType, {});
+      logger.info("response: " + JSON.stringify(response));
     }
-    // if (event.effect.loadMode === "random") {
-      // const currentModel = await getCurrentModel();
-      // const loadedModels = await getAvailableModels();
-      // const otherModels = loadedModels.availableModels.filter((m: { modelID: string; }) => m.modelID !== currentModel.modelID)
-      // const randomModel = otherModels[Math.floor(otherModels.length * Math.random())]
-      // event.effect.modelID = randomModel.modelID;
+    catch (e) {
+      logger.error("Error: " + e);
+    }
+    // switch (event.effect.requestType) {
+    //   case "skip":
+    //     await spotify.skip();
+    //     break;
+    //   case "play":
+    //     await spotify.play();
+    //     break;
+    //   case "pause":
+    //     await spotify["pause"]();
+    //     break;
+    //   default:
+    //     logger.error("Unhandled request type: " + event.effect.requestType);
+    //     break;
     // }
-
-    // await loadModel(
-    //     event.effect.modelID
-    // );
     return true;
   }
 };
+
