@@ -1,9 +1,8 @@
 import { EventEmitter } from "events";
-
-
-
-import { initLogger, logger } from "./logger";
+import { logger } from "./logger";
 import { FirebotParameterCategories, FirebotParams } from "@crowbartools/firebot-custom-scripts-types/types/modules/firebot-parameters";
+
+export const CLIENT_ID = "74f8735962614cf8b5ba72709d2eac5f";
 
 // import IntegrationDefinition from "@crowbartools/firebot-custom-scripts-types/types/modules/integration-definition";
 export type IntegrationDefinition<Params extends FirebotParams = FirebotParams> = {
@@ -13,14 +12,12 @@ export type IntegrationDefinition<Params extends FirebotParams = FirebotParams> 
   connectionToggle?: boolean;
   configurable?: boolean;
   settingCategories: FirebotParameterCategories<Params>;
-} & (
-    | {
+} & ( | {
       linkType: "id";
       idDetails: {
         steps: string;
       };
-    }
-    | {
+    } | {
       linkType: "auth";
       authProviderDetails: {
         id: string;
@@ -28,7 +25,7 @@ export type IntegrationDefinition<Params extends FirebotParams = FirebotParams> 
         redirectUriHost?: string;
         client: {
           id: string;
-          secret: string;
+          secret: string|undefined;
         };
         auth: {
           type?: string
@@ -40,57 +37,8 @@ export type IntegrationDefinition<Params extends FirebotParams = FirebotParams> 
         autoRefreshToken?: boolean;
         scopes: string;
       };
-    }
-    | { linkType: "other" | "none" }
-  );
+    } | { linkType: "other" | "none" });
 
-type Settings = { 
-  "auth": Auth
-};
-
-type Auth = { 
-  "access_token": string,
-  "token_type": string,
-  "expires_in": number,
-  "state": string
-};
-
-interface client {
-  id: string;
-  secret: string;
-};
-
-interface SpotifyUser {
-  display_name: string;
-  external_urls: {
-    spotify: string;
-  };
-  followers: {
-    href: string | null;
-    total: number;
-  };
-  href: string;
-  id: string;
-  images: {
-    url: string;
-    height: number;
-    width: number;
-  }[];
-  type: string;
-  uri: string;
-}
-interface Credentials {
-  accessToken?: string | undefined;
-  clientId?: string | undefined;
-  clientSecret?: string | undefined;
-  redirectUri?: string | undefined;
-  refreshToken?: string | undefined;
-}
-
-export let secret: client = {
-  id: "74f8735962614cf8b5ba72709d2eac5f",
-  secret: "",
-}
 
 export function genDef(): IntegrationDefinition {
   return {
@@ -105,7 +53,7 @@ export function genDef(): IntegrationDefinition {
       id: "Spotify",
       name: "Spotify",
       redirectUriHost: "localhost",
-      client: secret,
+      client: {id:CLIENT_ID, secret:undefined},
       auth: {
         type: 'token',
         tokenHost: "https://accounts.spotify.com",
@@ -136,6 +84,19 @@ class SpotifyIntegration extends EventEmitter {
   init() {
 
   }
+  private async getRefreshToken() {
+    const body = `grant_type=refresh_token&refresh_token=${this.accessToken}`;
+    
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: `grant_type=refresh_token&refresh_token=${this.accessToken}&client_id=${CLIENT_ID}`,
+    });
+    const data = await response.json();
+    return data;
+  }
 
   private headers(requestType?: string) {
     if (requestType == 'PUT') {
@@ -161,16 +122,28 @@ class SpotifyIntegration extends EventEmitter {
 
     this.accessToken = auth['access_token'];
 
+    logger.debug(`integrationData: ${JSON.stringify(integrationData)}`);
+
     // this.generateHeaders();
     await this.getProfile();
     
     if (this.userData == null) {
+      logger.error("No user data found in Spotify profile");
       this.disconnect();
       return;
     }
+    logger.debug(`userData: ${JSON.stringify(this.userData)}`);
+    logger.debug(`accessToken: ${this.accessToken}`);
+    logger.debug(`headers: ${JSON.stringify(this.headers())}`);
 
     logger.info(`Connected to Spotify as ${this.userData.display_name}`);
     logger.info(`Access token: ${this.accessToken}`);
+
+    if (!this.userData.display_name) {  
+      logger.error("No display name found in Spotify user data");
+      this.disconnect();
+      return;
+    }
 
     this.emit("connected", this.definition.id);
     this.connected = true;
@@ -196,6 +169,7 @@ class SpotifyIntegration extends EventEmitter {
       logger.error(`Error linking ${this.definition.id}: ${e}`);
     }
   }
+
   unlink() {
     this.emit("unlinked", this.definition.id);
     this.accessToken = null;
@@ -203,7 +177,13 @@ class SpotifyIntegration extends EventEmitter {
 
   async getProfile() {
     const response = await fetch(`${this.baseURI}/me`, this.headers());
-    this.userData = await response.json();
+    let data = await response.json();
+    if (data.error) {
+      logger.error(`Error getting profile: ${data.error.message}`);
+      this.userData = null;
+    } else {  
+      this.userData = data;
+    }
   }
 
   async getCurrentlyPlaying() {
