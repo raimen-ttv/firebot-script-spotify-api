@@ -46,7 +46,6 @@ const script: Firebot.CustomScript<Params> = {
 
     initLogger(logger);
     modules.integrationManager.registerIntegration({integration, definition:integration.definition});
-    modules.integrationManager.integrationIsConnectable("Spotify");
     let response = modules.integrationManager.getIntegrationById("Spotify");
     logger.debug(JSON.stringify(response));
 

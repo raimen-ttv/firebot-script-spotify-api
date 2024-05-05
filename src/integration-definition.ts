@@ -32,7 +32,6 @@ export type IntegrationDefinition<Params extends FirebotParams = FirebotParams> 
           tokenHost: string;
           tokenPath: string;
           authorizePath: string;
-          authorizeHost?: string;
         };
         autoRefreshToken?: boolean;
         scopes: string;
@@ -53,12 +52,12 @@ export function genDef(): IntegrationDefinition {
       id: "Spotify",
       name: "Spotify",
       redirectUriHost: "localhost",
-      client: {id:CLIENT_ID, secret:undefined},
+      client: {id:CLIENT_ID, secret:null},
       auth: {
         type: 'token',
         tokenHost: "https://accounts.spotify.com",
         tokenPath: '/api/token',
-        authorizePath: '/authorize?'
+        authorizePath: '/authorize'
       },
       autoRefreshToken: true,
       scopes: `user-read-playback-state user-modify-playback-state user-read-currently-playing app-remote-control streaming playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public user-follow-modify user-follow-read user-read-playback-position user-top-read user-read-recently-played user-library-modify user-library-read`
@@ -85,14 +84,14 @@ class SpotifyIntegration extends EventEmitter {
 
   }
   private async getRefreshToken() {
-    const body = `grant_type=refresh_token&refresh_token=${this.accessToken}`;
+    const body = `grant_type=refresh_token&refresh_token=${this.accessToken}&client_id=${CLIENT_ID}`;
     
     const response = await fetch("https://accounts.spotify.com/api/token", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: `grant_type=refresh_token&refresh_token=${this.accessToken}&client_id=${CLIENT_ID}`,
+      body:body,
     });
     const data = await response.json();
     return data;
@@ -123,6 +122,9 @@ class SpotifyIntegration extends EventEmitter {
     this.accessToken = auth['access_token'];
 
     logger.debug(`integrationData: ${JSON.stringify(integrationData)}`);
+  
+    let response = await this.getRefreshToken();
+    logger.debug(`Refresh token response: ${JSON.stringify(response)}`);
 
     // this.generateHeaders();
     await this.getProfile();
@@ -157,6 +159,7 @@ class SpotifyIntegration extends EventEmitter {
   async link(linkData: { auth: any; }) {
     try {
       const { auth } = linkData;
+      logger.debug(`Link data: ${JSON.stringify(linkData)}`);
       logger.info(`Linking ${this.definition.id}`);
       logger.debug(`Auth: ${JSON.stringify(auth)}`);
       this.accessToken = auth['access_token'];
@@ -188,7 +191,8 @@ class SpotifyIntegration extends EventEmitter {
 
   async getCurrentlyPlaying() {
     const response = await fetch(`${this.player}/currently-playing`, this.headers());
-    let data = await response.json();
+    let data:CurrentlyPlaying = await response.json();
+    logger.debug
     return data;
   }
 
